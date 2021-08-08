@@ -1,0 +1,133 @@
+import pandas as pd
+import random
+import names
+import os
+from google.cloud import bigquery
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'gradebooKey.json'
+
+
+# Data for generating DF
+school = 'Jeff High School'
+
+age_group = ['Freshman', 'Sophomore', 'Junior', 'Senior']
+
+class_name = {'English': ['American Lit', 'British Lit', 'Comparative Lit',
+                          'Contemporary Lit', 'World Lit', 'English',
+                          'Creative Writing', 'Journalism', 'Rhetoric',
+                          'Composition', 'Poetry', 'Debate'],
+
+              'Math': ['Pre-Algebra', 'Algebra 1', 'Algebra 2', 'Geometry',
+                       'Trigonometry', 'Pre-Calculus', 'Calculus', 'Statistics',
+                       'Integrated Math'],
+
+              'Social Studies': ['American History', 'World History', 'Geography',
+                                 'US Government',
+                                 'Economics', 'Psychology', 'Sociology', 'Anthropology',
+                                 'Political Science', 'Current Events', 'World Religions'],
+
+              'Science': ['Earth Science', 'Biology', 'Chemistry',
+                          'Organic Chemistry', 'Physics', 'Life Science', 'Environmental Science',
+                          'Astronomy', 'Botany'],
+
+              'Languages': ['Spanish', 'French', 'German', 'Latin', 'ASL', 'Chinese'],
+
+              'Arts': ['Choir', 'Jazz Band', 'Concert Band', 'Marching Band', 'Orchestra',
+                       'Music Theory', 'Dance', 'Drama', 'Art', 'Digital Media', 'Photography',
+                       'Sculpture', 'Ceramics', 'Film'],
+
+              'Physical Education': ['Health', 'Swimming', 'Weights', 'P.E.', 'Yoga'],
+
+              'Computers': ['Computer Literacy', 'Computer Programming', 'Computer Science',
+                            'Graphic Design', 'Web Design', 'Word Processing', 'Media Studies'],
+
+              'Consumer Sciences': ['Culinary Arts', 'Home-Ec', 'Nutrition'],
+
+              'Vocational Education': ['Auto Shop', 'Wood Shop', 'Welding', 'Driver Education',
+                                       'Robotics', 'Electronics'],
+
+              'AP Classes': ['Research', 'Art History', 'Studio Art', 'English Language and Composition',
+                             'English Literature and Composition', 'Comparative Government Policies',
+                             'European History', 'Macroeconomics', 'Microeconomics', 'Psychology',
+                             'Math & Computer Science', 'Calculus AB', 'Calculus BC', 'Statistics',
+                             'Biology', 'Chemistry', 'Physics']}
+
+grading_period = {'First Semester': ['First Quarter', 'Second Quarter'],
+                  'Second Semester': ['Third Quarter', 'Fourth Quarter']}
+
+
+# Student Info
+def student_generator():
+    first_name = names.get_first_name()
+    last_name = names.get_last_name()
+    full_name = last_name + ', ' + first_name
+    excused_absences = random.randint(0, 10)
+    unexcused_absences = random.randint(0, 15)
+    tardies = random.randint(0, 15)
+    grade_age = random.choice(age_group)
+    student_info = {'Name': full_name, 'Year': grade_age, 'Excused Absences': excused_absences,
+                    'Unexcused Absences': unexcused_absences, 'Tardies': tardies}
+    return student_info
+
+
+# class and grade info
+def class_generator():
+    class_section = random.choice(list(class_name.keys()))
+    class_topic = random.choice(class_name[class_section])
+    num_grade = random.randint(50, 100)
+    student_performance = {'Subject': class_section, 'Class': class_topic, 'Grade': num_grade}
+    return student_performance
+
+
+def scheduler():
+    class_schedule = []
+
+    counter = 0
+    while counter < 14:
+        x = class_generator()
+        in_schedule = False
+        for class_dictionary in class_schedule:
+            if x['Class'] in class_dictionary.values():
+                in_schedule = True
+
+        if not in_schedule:
+            counter += 1
+            class_schedule.append(x)
+
+    transcript_row = {}
+    for index, item in enumerate(class_schedule):
+        for key, value in item.items():
+            transcript_row[key + '_' + str(index + 1)] = value
+
+    return transcript_row
+
+
+student_body = []
+
+for student in range(2000):
+    ind_student = student_generator()
+    transcript = scheduler()
+    ind_student.update(transcript)
+    student_body.append(ind_student)
+
+
+students_df = pd.DataFrame(student_body)
+
+file_path = "gradebook1.parquet.gzip"
+
+students_df.reset_index().to_parquet(file_path, compression='gzip')
+
+client = bigquery.Client()
+
+table_id = "edfi-321322.GradeBook.Students"
+
+job_config = bigquery.LoadJobConfig(
+    source_format=bigquery.SourceFormat.PARQUET,
+    write_disposition="WRITE_TRUNCATE",
+    create_disposition="CREATE_IF_NEEDED"
+)
+
+with open(file_path, "rb") as source_file:
+    job = client.load_table_from_file(source_file, table_id, job_config=job_config)
+
+    job.result()  # Waits for the job to complete.
