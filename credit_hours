@@ -1,0 +1,113 @@
+import pandas
+import pandas as pd
+import os
+from google.cloud import bigquery
+import main
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'gradebooKey.json'
+
+pandas.set_option('display.max_rows', 100)
+
+# pulling course catalogue from main.py
+courses = main.class_name
+
+# separating by department
+eng_dep = courses['English']
+math_dep = courses['Math']
+soc_stud_dep = courses['Social Studies']
+science_dep = courses['Science']
+lang_dep = courses['Languages']
+arts_dep = courses['Arts']
+phys_ed_dep = courses['Physical Education']
+compu_dep = courses['Computers']
+voc_ed_dep = courses['Vocational Education']
+ap_dep = courses['AP Classes']
+
+# English department values
+eng_df_base = pd.DataFrame(eng_dep)
+eng_base = eng_df_base.rename(columns={0: 'Course'})
+eng_base['credit_hours'] = 1
+eng_base.loc[0:4, ['credit_hours']] = [3]
+eng_base.iloc[[5, 7, 8, 11], [1]] = 2
+
+# Math department values
+math_df_base = pd.DataFrame(math_dep)
+math_base = math_df_base.rename(columns={0: 'Course'})
+math_base['credit_hours'] = 2
+math_base.loc[3:7, ['credit_hours']] = [3]
+
+# Social Studies department values
+soc_stud_df_base = pd.DataFrame(soc_stud_dep)
+soc_stud_base = soc_stud_df_base.rename(columns={0: 'Course'})
+soc_stud_base['credit_hours'] = 2
+soc_stud_base.loc[4:8, ['credit_hours']] = [3]
+soc_stud_base.loc[9:10, ['credit_hours']] = [1]
+
+# Science department values
+science_df_base = pd.DataFrame(science_dep)
+science_base = science_df_base.rename(columns={0: 'Course'})
+science_base['credit_hours'] = 2
+science_base.loc[1:4, ['credit_hours']] = [3]
+
+# Languages department values
+lang_df_base = pd.DataFrame(lang_dep)
+lang_base = lang_df_base.rename(columns={0: 'Course'})
+lang_base['credit_hours'] = 2
+
+# Arts department values
+arts_df_base = pd.DataFrame(arts_dep)
+arts_base = arts_df_base.rename(columns={0: 'Course'})
+arts_base['credit_hours'] = 1
+arts_base.iloc[[3, 5, 9], [1]] = 2
+
+# Physical Education department values
+phys_ed_df_base = pd.DataFrame(phys_ed_dep)
+phys_ed_base = phys_ed_df_base.rename(columns={0: 'Course'})
+phys_ed_base['credit_hours'] = 1
+phys_ed_base.loc[0, ['credit_hours']] = [2]
+
+# Computers department values
+compu_df_base = pd.DataFrame(compu_dep)
+compu_base = compu_df_base.rename(columns={0: 'Course'})
+compu_base['credit_hours'] = 2
+compu_base.iloc[[0, 5], [1]] = 1
+compu_base.iloc[[1, 2], [1]] = 3
+
+# Vocational Education department values
+voc_ed_df_base = pd.DataFrame(voc_ed_dep)
+voc_ed_base = voc_ed_df_base.rename(columns={0: 'Course'})
+voc_ed_base['credit_hours'] = 2
+voc_ed_base.loc[4:5, ['credit_hours']] = 3
+
+# AP department values
+ap_df_base = pd.DataFrame(ap_dep)
+ap_base = ap_df_base.rename(columns={0: 'Course'})
+ap_base['credit_hours'] = 4
+ap_base.iloc[[0, 1, 2, 6], [1]] = 3
+ap_base.iloc[[10, 11, 12, 16], [1]] = 5
+
+# combining into one dataframe
+course_list = [eng_base, math_base, soc_stud_base, science_base,
+               lang_base, arts_base, phys_ed_base, compu_base,
+               voc_ed_base, ap_base]
+
+credit_hour_df = pd.concat(course_list, ignore_index=True)
+
+file_path = "credit_hours.parquet.gzip"
+
+credit_hour_df.reset_index().to_parquet(file_path, compression='gzip')
+
+client = bigquery.Client()
+
+table_id = "edfi-321322.GradeBook.Credit_Hours"
+
+job_config = bigquery.LoadJobConfig(
+    source_format=bigquery.SourceFormat.PARQUET,
+    write_disposition="WRITE_TRUNCATE",
+    create_disposition="CREATE_IF_NEEDED"
+)
+
+with open(file_path, "rb") as source_file:
+    job = client.load_table_from_file(source_file, table_id, job_config=job_config)
+
+    job.result()  # Waits for the job to complete.
