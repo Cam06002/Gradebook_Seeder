@@ -1,3 +1,7 @@
+# Sample SQL used to create additional tables in my database to display students in each class for each period (Period 3 in this example)
+# Orders by Subject, Class, and Grade.
+# Lists each student in each class and calculates the GPA Points earned
+
 CREATE TABLE `edfi-321322.GradeBook.Period_3` AS
 SELECT Subject_3, Class_3, Name, Grade_3,
 CASE 
