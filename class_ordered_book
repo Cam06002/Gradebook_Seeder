@@ -1,0 +1,33 @@
+CREATE TABLE `edfi-321322.GradeBook.Period_3` AS
+SELECT Subject_3, Class_3, Name, Grade_3,
+CASE 
+    # GPA Points for AP Classes
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 = 100 THEN 5.3
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 94 and Grade_3 < 100 THEN 5.0
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 89 and Grade_3 < 95 THEN 4.7
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 86 and Grade_3 < 90 THEN 4.3
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 83 and Grade_3 < 87 THEN 4.0
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 79 and Grade_3 < 84 THEN 3.7
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 76 and Grade_3 < 80 THEN 3.3
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 73 and Grade_3 < 77 THEN 3.0
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 69 and Grade_3 < 74 THEN 2.7
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 66 and Grade_3 < 70 THEN 2.3
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 63 and Grade_3 < 67 THEN 2.0
+    WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 59 and Grade_3 < 64 THEN 1.7
+    # GPA for non-AP Classes
+        WHEN Subject_3 LIKE 'AP%' AND Grade_3 = 100 THEN 4.3
+    WHEN  Grade_3 > 94 and Grade_3 < 100 THEN 4.0
+    WHEN  Grade_3 > 89 and Grade_3 < 95 THEN 3.7
+    WHEN  Grade_3 > 86 and Grade_3 < 90 THEN 3.3
+    WHEN  Grade_3 > 83 and Grade_3 < 87 THEN 3.0
+    WHEN  Grade_3 > 79 and Grade_3 < 84 THEN 2.7
+    WHEN  Grade_3 > 76 and Grade_3 < 80 THEN 2.3
+    WHEN  Grade_3 > 73 and Grade_3 < 77 THEN 2.0
+    WHEN  Grade_3 > 69 and Grade_3 < 74 THEN 1.7
+    WHEN  Grade_3 > 66 and Grade_3 < 70 THEN 1.3
+    WHEN  Grade_3 > 63 and Grade_3 < 67 THEN 1.0
+    WHEN  Grade_3 > 59 and Grade_3 < 64 THEN 0.7
+    ELSE 0.0
+END AS GPA_Points
+FROM `edfi-321322.GradeBook.Students`
+ORDER BY Subject_3, Class_3, Grade_3 DESC;
