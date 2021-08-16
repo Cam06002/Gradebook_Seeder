@@ -19,7 +19,7 @@ CASE
     WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 63 and Grade_3 < 67 THEN 2.0
     WHEN Subject_3 LIKE 'AP%' AND Grade_3 > 59 and Grade_3 < 64 THEN 1.7
     # GPA for non-AP Classes
-        WHEN Subject_3 LIKE 'AP%' AND Grade_3 = 100 THEN 4.3
+    WHEN  Grade_3 = 100 THEN 4.3
     WHEN  Grade_3 > 94 and Grade_3 < 100 THEN 4.0
     WHEN  Grade_3 > 89 and Grade_3 < 95 THEN 3.7
     WHEN  Grade_3 > 86 and Grade_3 < 90 THEN 3.3
