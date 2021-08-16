@@ -20,6 +20,7 @@ lang_dep = courses['Languages']
 arts_dep = courses['Arts']
 phys_ed_dep = courses['Physical Education']
 compu_dep = courses['Computers']
+consu_dep = courses['Consumer Sciences']
 voc_ed_dep = courses['Vocational Education']
 ap_dep = courses['AP Classes']
 
@@ -73,6 +74,11 @@ compu_base['credit_hours'] = 2
 compu_base.iloc[[0, 5], [1]] = 1
 compu_base.iloc[[1, 2], [1]] = 3
 
+# Consumer Sciences Department Values
+consu_df_base = pd.DataFrame(consu_dep)
+consu_base = consu_df_base.rename(columns={0: 'Course'})
+consu_base['credit_hours'] = 1
+
 # Vocational Education department values
 voc_ed_df_base = pd.DataFrame(voc_ed_dep)
 voc_ed_base = voc_ed_df_base.rename(columns={0: 'Course'})
@@ -89,7 +95,7 @@ ap_base.iloc[[10, 11, 12, 16], [1]] = 5
 # combining into one dataframe
 course_list = [eng_base, math_base, soc_stud_base, science_base,
                lang_base, arts_base, phys_ed_base, compu_base,
-               voc_ed_base, ap_base]
+               consu_base, voc_ed_base, ap_base]
 
 credit_hour_df = pd.concat(course_list, ignore_index=True)
 
